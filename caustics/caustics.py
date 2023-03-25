@@ -121,10 +121,12 @@ def CreateImage(resolution, limit):
 
         line_end = center + numpy.array([-cos_gammai, sin_gammai]) * radius
 
+        line_brightness = sqrt(1 - h * h) * brightness
+
         def output_additive(p, coverage):
             pi = (trunc(p[1]), trunc(p[0]))
             if (pi[0] >= 0) and (pi[1] >= 0) and (pi[0] < resolution) and (pi[1] < resolution):
-                src[pi] += numpy.array([0.0, 0.0, 1.0]) * coverage * brightness
+                src[pi] += numpy.array([0.0, 0.0, 1.0]) * coverage * line_brightness
 
         rasterize_line_antialiased(line_start + 0.5, line_end + 0.5, thickness, output_additive)
 
@@ -151,12 +153,12 @@ def CreateImage(resolution, limit):
                 p2c = p - center
                 distance_to_axis = abs(p2c[1])
                 amplification_factor = max( 1, radius * abs(h) / ( distance_to_axis + 0.5 ) ) # we are calculating 3d ball caustics, have to account for that
-                src[pi] += numpy.array([0.0, 0.0, 1.0]) * coverage * brightness * (1 - fresnel_shlick) * amplification_factor
+                src[pi] += numpy.array([0.0, 0.0, 1.0]) * coverage * line_brightness * (1 - fresnel_shlick) * amplification_factor
 
         rasterize_line_antialiased(line_start + 0.5, line_end + 0.5, thickness, output_additive)
 
-    for i in range(-int(radius), int(radius)):
-        h = i / radius
+    for i in range(-int(radius * pi * 0.5), int(radius * pi * 0.5)):
+        h = sin(i / radius)
         if (h > limit): break
         DrawRefractedLine(h, 1, 1.55)
 
